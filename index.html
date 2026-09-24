@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LunchLady.io</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Courier+Prime:wght@400;700&display=swap">
+<style>
+  :root {
+    --ink: #111;
+    --paper: #fff;
+    --grey: #6b6b6b;
+    --rule: #111;
+    --sign: "Alfa Slab One", "Rockwell", Georgia, serif;
+    --type: "Courier Prime", "Courier New", monospace;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body { background: var(--paper); color: var(--ink); font: 16px/1.5 var(--type); padding: 0 16px 48px; }
+  main { max-width: 640px; margin: 0 auto; }
+
+  header { text-align: center; padding: 32px 0 20px; border-bottom: 4px double var(--rule); margin-bottom: 24px; }
+  h1 { font: 400 clamp(40px, 10vw, 64px)/1 var(--sign); margin: 0; letter-spacing: 0.01em; }
+  h1 small { font-size: 0.4em; }
+  header p { margin: 8px 0 0; letter-spacing: 0.2em; text-transform: uppercase; font-size: 13px; font-weight: 700; }
+
+  .hatch { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: #000; border: 3px solid var(--ink); }
+  .hatch video, .hatch canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hatch video { object-fit: cover; transform: scaleX(-1); }
+  .hatch video { filter: grayscale(1) contrast(1.1); }
+  .hatch .idle { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px; color: #fff; }
+  .scanline { position: absolute; left: 0; right: 0; height: 3px; background: #fff; box-shadow: 0 0 14px #fff; top: 0; animation: scan 1.2s linear infinite; }
+  @keyframes scan { from { top: 0; } to { top: 100%; } }
+  .countdown { position: absolute; top: 10px; right: 14px; font: 400 44px/1 var(--sign); color: #fff; text-shadow: 0 0 8px #000; }
+
+  .readout { font-size: 13px; color: var(--grey); margin: 8px 0 0; min-height: 1.5em; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
+  .readout div { display: flex; justify-content: space-between; border-bottom: 1px dotted #bbb; }
+  .readout b { color: var(--ink); }
+  .readout .hint { grid-column: 1 / -1; margin: 0; }
+
+  button {
+    font: 400 18px var(--sign); letter-spacing: 0.02em; color: var(--paper); background: var(--ink);
+    border: 3px solid var(--ink); padding: 12px 22px; cursor: pointer; width: 100%; margin-top: 14px;
+  }
+  button:hover:not(:disabled) { background: #333; border-color: #333; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.ghost { background: var(--paper); color: var(--ink); }
+  button.ghost:hover:not(:disabled) { background: #eee; border-color: var(--ink); }
+  button.link { all: unset; cursor: pointer; text-decoration: underline; font-weight: 700; }
+
+  .loc { margin: 18px 0 0; font-size: 14px; display: flex; gap: 8px; flex-wrap: wrap; align-items: baseline; }
+  .loc .status { flex: 1; min-width: 200px; }
+  .loc form { display: flex; gap: 8px; width: 100%; }
+  .loc input { flex: 1; min-width: 0; font: 700 15px var(--type); border: 2px solid var(--ink); padding: 8px 10px; background: var(--paper); color: var(--ink); }
+  .loc form button { width: auto; margin: 0; padding: 6px 14px; font-size: 15px; }
+
+  .result { border: 3px solid var(--ink); padding: 20px; margin-top: 28px; }
+  .result .placeholder { margin: 0; color: var(--grey); }
+  .label { font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--grey); margin: 0; }
+  .archetype { font: 700 20px var(--type); margin: 2px 0 16px; }
+  .dish { font: 400 clamp(32px, 7vw, 46px)/1.05 var(--sign); margin: 4px 0 10px; }
+  .where { margin: 0 0 14px; }
+  .where a { color: var(--ink); font-weight: 700; }
+  .reason { margin: 0 0 14px; padding-left: 12px; border-left: 3px solid var(--ink); font-style: italic; }
+  .evidence { list-style: none; padding: 0; margin: 0; font-size: 13px; color: var(--grey); }
+  .evidence li { display: inline; }
+  .evidence li + li::before { content: " · "; }
+
+  .others { margin-top: 28px; }
+  .others h2 { font: 400 20px var(--sign); margin: 0 0 6px; }
+  .others ol { list-style: none; margin: 0; padding: 0; border-top: 2px solid var(--ink); }
+  .others li { border-bottom: 1px solid #ccc; }
+  .others li button {
+    all: unset; box-sizing: border-box; width: 100%; cursor: pointer; display: flex; justify-content: space-between; gap: 12px; padding: 10px 4px;
+  }
+  .others li button:hover, .others li button:focus-visible { background: #f1f1f1; }
+  .others .d em { font-style: normal; color: var(--grey); }
+  .others .m { white-space: nowrap; color: var(--grey); }
+
+  footer { margin-top: 32px; padding-top: 14px; border-top: 4px double var(--rule); font-size: 12px; color: var(--grey); display: grid; gap: 8px; }
+  footer a { color: var(--grey); }
+  footer label { color: var(--ink); cursor: pointer; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>LUNCH LADY<small>.io</small></h1>
+    <p>What’s for dinner, love?</p>
+  </header>
+
+  <div class="hatch">
+    <video id="video" playsinline muted></video>
+    <canvas id="overlay"></canvas>
+    <div class="idle" id="idle">Press the button and give the camera your best face for five seconds.</div>
+    <div class="scanline" id="scanline" hidden></div>
+    <div class="countdown" id="countdown" hidden></div>
+  </div>
+  <div class="readout" id="readout"></div>
+
+  <button id="judgeBtn">What’s for dinner?</button>
+
+  <div class="loc">
+    <span class="status" id="locStatus">Finding where you are…</span>
+    <button class="link" id="changeLoc" type="button">Change</button>
+    <form id="locForm" hidden>
+      <input id="place" placeholder="Town or postcode">
+      <button type="submit">Set</button>
+    </form>
+  </div>
+
+  <section class="result">
+    <p class="placeholder" id="placeholder">Your dinner will appear here.</p>
+    <div id="result" hidden>
+      <p class="label">You’re</p>
+      <p class="archetype" id="archetype"></p>
+      <p class="label">You’re having</p>
+      <p class="dish" id="dish"></p>
+      <p class="where" id="where"></p>
+      <p class="reason" id="reason"></p>
+      <ul class="evidence" id="evidence"></ul>
+      <button id="rerollBtn" class="ghost">Something else</button>
+    </div>
+  </section>
+
+  <section class="others" id="others" hidden>
+    <h2>Or try one of these</h2>
+    <ol id="specials"></ol>
+  </section>
+
+  <footer>
+    <label><input type="checkbox" id="speak" checked> Read it out loud</label>
+    <span>Everything happens in your browser and nothing is uploaded or saved. She gives your hair, face and clobber a once-over purely for a laugh, and never judges skin colour. Face reading by MediaPipe. Restaurant data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>.</span>
+  </footer>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const video = $("video"), overlay = $("overlay"), octx = overlay.getContext("2d");
+const work = document.createElement("canvas"); work.width = 160; work.height = 120;
+const wctx = work.getContext("2d", { willReadFrequently: true });
+
+let stream, analyser, audioBuf, prevLuma = null;
+let live = { light: 0, motion: 0, voiceDb: -100, seen: false, m: {}, hair: "–", clothes: "–", clothesRgb: [0, 0, 0], lm: null };
+let scanning = null;
+let coords = null, restaurants = null, lookup = null;
+let current = null; // { arch, traits, pool, pick }
+
+// The silly things she measures. Each is 0..1.
+const PARAMS = [
+  { key: "barnet", name: "Barnet altitude", hi: "That barnet’s got its own weather.", lo: "Low-maintenance barnet. Very aerodynamic." },
+  { key: "hooter", name: "Hooter heft", hi: "Proper noble hooter, that.", lo: "Dainty little button nose, bless." },
+  { key: "peeper", name: "Peeper wattage", hi: "Eyes like saucers.", lo: "Peepers at half-mast." },
+  { key: "brow", name: "Brow suspicion", hi: "Eyebrows halfway up your forehead.", lo: "Brows flat as a pancake. Unbothered." },
+  { key: "grin", name: "Grin-o-meter", hi: "Grinning like a Cheshire cat.", lo: "Face like a wet weekend." },
+  { key: "clobber", name: "Clobber volume", hi: "Clobber so loud I can hear it.", lo: "Clobber that says ‘don’t look at me’." },
+  { key: "nosey", name: "Nosey-parker lean", hi: "Right up in the lens, you.", lo: "Hiding at the back like it’s the school photo." },
+  { key: "gob", name: "Gob flap", hi: "Gob open more than it’s shut.", lo: "Lips sealed tighter than a biscuit tin." },
+];
+
+/* ---------- Face reader (MediaPipe, runs in the browser) ---------- */
+
+const VISION = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+const FACE_MODEL = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
+let faceReader = null;
+const faceReady = (async () => {
+  try {
+    const { FaceLandmarker, FilesetResolver } = await import(VISION + "/vision_bundle.mjs");
+    const files = await FilesetResolver.forVisionTasks(VISION + "/wasm");
+    const opts = (delegate) => ({ baseOptions: { modelAssetPath: FACE_MODEL, delegate }, runningMode: "VIDEO", numFaces: 1, outputFaceBlendshapes: true });
+    try { faceReader = await FaceLandmarker.createFromOptions(files, opts("GPU")); }
+    catch { faceReader = await FaceLandmarker.createFromOptions(files, opts("CPU")); }
+  } catch (err) { console.warn("Face reader failed to load", err); }
+})();
+
+async function start() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: "user" }, audio: true });
+  } catch (err) {
+    $("idle").textContent = "I can’t see you, love. Let the browser use your camera and microphone. (" + err.name + ")";
+    return false;
+  }
+  video.srcObject = stream;
+  await video.play();
+  $("idle").hidden = true;
+
+  const ac = new AudioContext();
+  const src = ac.createMediaStreamSource(stream);
+  analyser = ac.createAnalyser();
+  analyser.fftSize = 2048;
+  src.connect(analyser);
+  audioBuf = new Float32Array(analyser.fftSize);
+
+  requestAnimationFrame(tick);
+  return true;
+}
+
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min, s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  const h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [h * 60, s, l];
+}
+
+function colourName(h, s, l) {
+  if (l < 0.16) return "black";
+  if (l > 0.85 && s < 0.35) return "white";
+  if (s < 0.18) return l < 0.45 ? "charcoal" : "grey";
+  if (h < 15 || h >= 345) return l < 0.35 ? "maroon" : "red";
+  if (h < 40) return l < 0.4 ? "brown" : "orange";
+  if (h < 65) return l < 0.4 ? "olive" : "yellow";
+  if (h < 160) return "green";
+  if (h < 195) return "teal";
+  if (h < 250) return l < 0.3 ? "navy" : "blue";
+  if (h < 290) return "purple";
+  return "pink";
+}
+
+function hairName([r, g, b]) {
+  const [h, s, l] = rgbToHsl(r, g, b);
+  if (l < 0.13) return "jet black";
+  if (s > 0.3 && h > 90 && h < 345) return "dyed " + colourName(h, s, l);
+  if (l > 0.6 && s < 0.2) return "silver";
+  if (h < 35 && s > 0.4 && l > 0.28 && l < 0.62) return "ginger";
+  if (l > 0.5 && h < 65) return "blonde";
+  return l < 0.25 ? "dark" : "brown";
+}
+
+const clamp = (v) => Math.max(0, Math.min(1, v));
+const norm = (v, lo, hi) => clamp((v - lo) / (hi - lo));
+const cdist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+
+// Pixels of the current frame at 160x120, unmirrored (same space as the face landmarks).
+let frame = null;
+function patch(x0, y0, x1, y1) {
+  const W = work.width, H = work.height;
+  const ax = Math.max(0, Math.floor(Math.min(x0, x1) * W)), bx = Math.min(W, Math.ceil(Math.max(x0, x1) * W));
+  const ay = Math.max(0, Math.floor(Math.min(y0, y1) * H)), by = Math.min(H, Math.ceil(Math.max(y0, y1) * H));
+  let r = 0, g = 0, b = 0, n = 0;
+  for (let y = ay; y < by; y++) for (let x = ax; x < bx; x++) { const i = (y * W + x) * 4; r += frame[i]; g += frame[i + 1]; b += frame[i + 2]; n++; }
+  return n ? [r / n, g / n, b / n] : null;
+}
+
+// Dominant colour, saturation and pattern busyness of a region.
+function regionStats(x0, y0, x1, y1) {
+  const W = work.width, H = work.height;
+  const ax = Math.max(0, Math.floor(x0 * W)), bx = Math.min(W - 1, Math.ceil(x1 * W));
+  const ay = Math.max(0, Math.floor(y0 * H)), by = Math.min(H - 1, Math.ceil(y1 * H));
+  const bins = Array.from({ length: 12 }, () => ({ w: 0, r: 0, g: 0, b: 0 }));
+  const neutral = { w: 0, r: 0, g: 0, b: 0 };
+  let sat = 0, busy = 0, n = 0;
+  for (let y = ay; y < by; y++) for (let x = ax; x < bx; x++) {
+    const i = (y * W + x) * 4, r = frame[i], g = frame[i + 1], b = frame[i + 2];
+    const [h, s, l] = rgbToHsl(r, g, b);
+    const L = r + g + b, Lr = frame[i + 4] + frame[i + 5] + frame[i + 6], Ld = frame[i + W * 4] + frame[i + W * 4 + 1] + frame[i + W * 4 + 2];
+    busy += (Math.abs(L - Lr) + Math.abs(L - Ld)) / 765;
+    const chroma = s * (1 - Math.abs(2 * l - 1));
+    sat += chroma; n++;
+    const bin = chroma > 0.12 ? bins[Math.floor(h / 30) % 12] : neutral;
+    const w = chroma > 0.12 ? chroma : 0.35;
+    bin.w += w; bin.r += r * w; bin.g += g * w; bin.b += b * w;
+  }
+  if (!n) return null;
+  const top = bins.reduce((a, x) => (x.w > a.w ? x : a), neutral);
+  const rgb = [top.r / top.w, top.g / top.w, top.b / top.w];
+  return { rgb, sat: sat / n, busy: busy / n };
+}
+
+function readFrame() {
+  wctx.drawImage(video, 0, 0, work.width, work.height);
+  frame = wctx.getImageData(0, 0, work.width, work.height).data;
+  const px = work.width * work.height, luma = new Float32Array(px);
+  let lum = 0, motion = 0;
+  for (let p = 0; p < px; p++) {
+    const L = (0.2126 * frame[p * 4] + 0.7152 * frame[p * 4 + 1] + 0.0722 * frame[p * 4 + 2]) / 255;
+    luma[p] = L; lum += L;
+    if (prevLuma) motion += Math.abs(L - prevLuma[p]);
+  }
+  prevLuma = luma;
+  live.light += (lum / px - live.light) * 0.25;
+  live.motion += (Math.min(1, (motion / px) * 14) - live.motion) * 0.25;
+}
+
+// Turn landmarks + pixels into the silly parameters.
+function measure(lm, blend) {
+  const vw = video.videoWidth, vh = video.videoHeight;
+  const P = (i) => lm[i];
+  const d = (a, b) => Math.hypot((P(a).x - P(b).x) * vw, (P(a).y - P(b).y) * vh);
+  const bs = Object.fromEntries((blend || []).map((c) => [c.categoryName, c.score]));
+  const faceW = d(234, 454), faceH = d(10, 152);
+  const fw = Math.abs(P(454).x - P(234).x), fh = P(152).y - P(10).y, top = P(10), chin = P(152);
+
+  const hooter = 0.5 * norm(d(129, 358) / faceW, 0.2, 0.34) + 0.5 * norm(d(168, 2) / faceH, 0.24, 0.4);
+  const eyeOpen = (d(159, 145) / d(33, 133) + d(386, 374) / d(362, 263)) / 2;
+  const peeper = clamp(norm(eyeOpen, 0.12, 0.38) * 0.75 + ((bs.eyeWideLeft || 0) + (bs.eyeWideRight || 0)) * 0.25);
+  const brow = clamp((bs.browInnerUp || 0) * 0.8 + ((bs.browOuterUpLeft || 0) + (bs.browOuterUpRight || 0)) * 0.5);
+  const grin = clamp(((bs.mouthSmileLeft || 0) + (bs.mouthSmileRight || 0)) * 0.7);
+  const roll = Math.abs(Math.atan2((P(263).y - P(33).y) * vh, (P(263).x - P(33).x) * vw) * 180 / Math.PI);
+  const nosey = clamp(norm(faceW / vw, 0.18, 0.5) * 0.75 + norm(roll, 3, 20) * 0.25);
+  const gob = clamp((bs.jawOpen || 0) * 1.4 * 0.7 + clamp((live.voiceDb + 60) / 40) * 0.3);
+
+  // Hair: sample just above the forehead, then climb until it looks like background.
+  const bg = [patch(0, 0, 0.1, 0.1), patch(0.9, 0, 1, 0.1)].reduce((a, b) => a.map((v, i) => (v + b[i]) / 2));
+  const hair = patch(top.x - fw * 0.15, top.y - fh * 0.14, top.x + fw * 0.15, top.y - fh * 0.04) || bg;
+  const forehead = patch(top.x - fw * 0.1, top.y + fh * 0.04, top.x + fw * 0.1, top.y + fh * 0.1) || hair;
+  let y = top.y - fh * 0.04;
+  const step = 1 / work.height;
+  while (y > 0) {
+    const s = patch(top.x - fw * 0.1, y - step, top.x + fw * 0.1, y);
+    if (!s || cdist(s, hair) > cdist(s, bg)) break;
+    y -= step;
+  }
+  const altitude = (top.y - Math.max(0, y)) / fh;
+  const hairy = cdist(hair, forehead) > 45 ? 1 : 0.35;
+  const barnet = clamp(norm(altitude, 0.05, 0.5) * hairy);
+
+  // Clobber: everything below the chin.
+  const cy = Math.min(chin.y + fh * 0.25, 0.85);
+  const cl = regionStats(Math.max(0, chin.x - fw * 1.1), cy, Math.min(1, chin.x + fw * 1.1), 1);
+  const clobber = cl ? clamp(cl.sat * 2.2 * 0.65 + norm(cl.busy, 0.02, 0.12) * 0.35) : 0.5;
+
+  const vals = { barnet, hooter, peeper, brow, grin, clobber, nosey, gob };
+  for (const k in vals) live.m[k] = live.m[k] == null ? vals[k] : live.m[k] + (vals[k] - live.m[k]) * 0.2;
+  live.hair = hairy === 1 ? hairName(hair) : "barely any";
+  if (cl) { live.clothesRgb = cl.rgb; live.clothes = colourName(...rgbToHsl(...cl.rgb)); }
+}
+
+function readAudio() {
+  if (!analyser) return;
+  analyser.getFloatTimeDomainData(audioBuf);
+  let sum = 0;
+  for (let i = 0; i < audioBuf.length; i++) sum += audioBuf[i] * audioBuf[i];
+  const db = 20 * Math.log10(Math.sqrt(sum / audioBuf.length) + 1e-8);
+  live.voiceDb += (db - live.voiceDb) * 0.3;
+}
+
+// Landmarks are in video space; the video is mirrored and cropped to fill the hatch.
+function toCanvas(p) {
+  const w = overlay.width, h = overlay.height, vw = video.videoWidth, vh = video.videoHeight;
+  const s = Math.max(w / vw, h / vh), ox = (w - vw * s) / 2, oy = (h - vh * s) / 2;
+  return [w - (p.x * vw * s + ox), p.y * vh * s + oy];
+}
+
+function drawOverlay() {
+  const w = overlay.clientWidth, h = overlay.clientHeight;
+  if (overlay.width !== w) { overlay.width = w; overlay.height = h; }
+  octx.clearRect(0, 0, w, h);
+  const ink = scanning ? "#fff" : "rgba(255,255,255,0.55)";
+  octx.strokeStyle = ink; octx.lineWidth = 4;
+  const m = 14, L = Math.min(w, h) * 0.12;
+  for (const [x, y, dx, dy] of [[m, m, 1, 1], [w - m, m, -1, 1], [m, h - m, 1, -1], [w - m, h - m, -1, -1]]) {
+    octx.beginPath(); octx.moveTo(x + dx * L, y); octx.lineTo(x, y); octx.lineTo(x, y + dy * L); octx.stroke();
+  }
+  const lm = live.lm;
+  if (!lm) return;
+  octx.lineWidth = 2; octx.font = "700 11px 'Courier Prime', monospace";
+  const line = (a, b, label) => {
+    const [x1, y1] = toCanvas(a), [x2, y2] = toCanvas(b);
+    octx.beginPath(); octx.moveTo(x1, y1); octx.lineTo(x2, y2); octx.stroke();
+    for (const [x, y] of [[x1, y1], [x2, y2]]) { octx.beginPath(); octx.arc(x, y, 3, 0, 7); octx.fill(); }
+    if (label) tag(label, Math.max(x1, x2) + 8, (y1 + y2) / 2);
+  };
+  const tag = (text, x, y) => {
+    const tw = octx.measureText(text).width;
+    octx.fillStyle = "#000"; octx.fillRect(x - 3, y - 9, tw + 6, 14);
+    octx.fillStyle = "#fff"; octx.fillText(text, x, y + 2);
+  };
+  octx.fillStyle = "#fff"; octx.strokeStyle = ink;
+  const fh = lm[152].y - lm[10].y;
+  line(lm[129], lm[358], "HOOTER");
+  line(lm[33], lm[133]); line(lm[362], lm[263], "PEEPERS");
+  line(lm[10], { x: lm[10].x, y: Math.max(0.02, lm[10].y - fh * (0.05 + (live.m.barnet || 0) * 0.45)) }, "BARNET");
+  const [cx, cy] = toCanvas({ x: lm[152].x, y: Math.min(lm[152].y + fh * 0.25, 0.85) });
+  octx.setLineDash([5, 5]); octx.beginPath(); octx.moveTo(cx - 60, cy); octx.lineTo(cx + 60, cy); octx.stroke(); octx.setLineDash([]);
+  tag("CLOBBER", cx + 66, cy);
+}
+
+let lastVideoTime = -1;
+function tick() {
+  if (video.readyState >= 2 && video.currentTime !== lastVideoTime) {
+    lastVideoTime = video.currentTime;
+    readFrame(); readAudio();
+    const res = faceReader?.detectForVideo(video, performance.now());
+    live.lm = res?.faceLandmarks?.[0] || null;
+    live.seen = !!live.lm;
+    if (live.lm) measure(live.lm, res.faceBlendshapes?.[0]?.categories);
+    renderReadout();
+    if (scanning && live.seen) scanning.samples.push({ ...live.m, hair: live.hair, clothes: live.clothes, clothesRgb: live.clothesRgb, light: live.light, motion: live.motion });
+  }
+  drawOverlay();
+  if (scanning) {
+    const left = Math.ceil((scanning.end - performance.now()) / 1000);
+    $("countdown").textContent = Math.max(left, 0);
+    if (performance.now() >= scanning.end) finishScan();
+  }
+  requestAnimationFrame(tick);
+}
+
+function renderReadout() {
+  const el = $("readout");
+  if (!faceReader) { el.innerHTML = `<p class="hint">Warming up the face reader…</p>`; return; }
+  if (!live.seen) { el.innerHTML = `<p class="hint">Can’t see your face, love. Get in the frame.</p>`; return; }
+  el.innerHTML = PARAMS.map((p) => `<div><span>${p.name}</span><b>${Math.round((live.m[p.key] || 0) * 100)}%</b></div>`).join("");
+}
+
+/* ---------- Location + restaurants ---------- */
+
+function locStatus(msg) { $("locStatus").textContent = msg; }
+
+function requestLocation() {
+  if (!navigator.geolocation) return locStatus("Your browser can’t share your location. Pick a place instead.");
+  navigator.geolocation.getCurrentPosition(
+    (pos) => setCoords(pos.coords.latitude, pos.coords.longitude, "you"),
+    () => locStatus("Location is off. Pick a place instead."),
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 300000 }
+  );
+}
+
+async function geocode() {
+  const q = $("place").value.trim();
+  if (!q) return;
+  locStatus("Looking for “" + q + "”…");
+  try {
+    const res = await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + encodeURIComponent(q), { headers: { "Accept-Language": "en" } });
+    const [hit] = await res.json();
+    if (!hit) return locStatus("Never heard of it, love. Try another.");
+    setCoords(+hit.lat, +hit.lon, hit.display_name.split(",").slice(0, 2).join(","));
+  } catch { locStatus("Couldn’t search just now. Try again in a bit."); }
+}
+
+const OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.private.coffee/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
+
+function setCoords(lat, lon, label) {
+  lookup = findRestaurants(lat, lon, label);
+  return lookup;
+}
+
+async function findRestaurants(lat, lon, label) {
+  coords = { lat, lon };
+  restaurants = null;
+  locStatus("Finding places to eat near " + label + "…");
+  const q = `[out:json][timeout:25];nwr["amenity"~"^(restaurant|fast_food|cafe|pub|food_court)$"]["name"](around:1800,${lat},${lon});out center 600;`;
+  for (const url of OVERPASS) {
+    try {
+      const res = await fetch(url, { method: "POST", body: "data=" + encodeURIComponent(q), signal: AbortSignal.timeout(20000) });
+      if (!res.ok) continue;
+      const json = await res.json();
+      restaurants = json.elements.map((e) => {
+        const la = e.lat ?? e.center?.lat, lo = e.lon ?? e.center?.lon;
+        const tagged = (e.tags.cuisine || "").toLowerCase().split(/[;,]/).map((c) => c.trim().replace(/\s+/g, "_")).filter(Boolean);
+        return {
+          name: e.tags.name,
+          amenity: e.tags.amenity,
+          cuisines: tagged.length ? tagged : guessCuisine(e.tags.name, e.tags.amenity),
+          lat: la, lon: lo,
+          dist: distance(lat, lon, la, lo),
+        };
+      }).filter((r) => r.lat != null).sort((a, b) => a.dist - b.dist);
+      const n = restaurants.length;
+      locStatus(n ? `${n} places to eat near ${label}.` : "There’s nowt round here. Bring a packed lunch.");
+      return;
+    } catch { /* try next mirror */ }
+  }
+  locStatus("Couldn’t reach the map. You’ll get a dish but no restaurant.");
+}
+
+// Lots of places aren't tagged with a cuisine, so have a guess from the name.
+const NAME_HINTS = [
+  [/pizza|pizzeria/i, "pizza"], [/kebab|doner|shish/i, "kebab"], [/chip|fish|frier|fryer/i, "fish_and_chips"],
+  [/curry|tandoor|masala|balti|spice|india|bengal|punjab|mahal/i, "indian"], [/thai|siam|bangkok/i, "thai"],
+  [/sushi/i, "sushi"], [/ramen/i, "ramen"], [/noodle|wok|dragon|panda|china|chinese|canton/i, "chinese"],
+  [/pho|saigon|viet/i, "vietnamese"], [/burger/i, "burger"], [/chicken|wings|peri/i, "chicken"],
+  [/taco|burrito|mex|cantina/i, "mexican"], [/greek|souvlaki|gyro/i, "greek"], [/turk|anatolia|istanbul/i, "turkish"],
+  [/leban|beirut|falafel|shawarma/i, "lebanese"], [/tapas|spain|spanish/i, "spanish"], [/trattoria|osteria|pasta|italia|ristorante/i, "italian"],
+  [/bistro|brasserie/i, "french"], [/korea|seoul/i, "korean"], [/jerk|caribbean|jamaica/i, "caribbean"],
+  [/sandwich|deli|butty/i, "sandwich"], [/bakery|bakehouse|greggs/i, "bakery"], [/gelato|ice ?cream/i, "ice_cream"], [/vegan/i, "vegan"], [/cafe|café|coffee|tea ?room/i, "cafe"],
+];
+function guessCuisine(name, amenity) {
+  for (const [re, c] of NAME_HINTS) if (re.test(name)) return [c];
+  return amenity === "cafe" ? ["cafe"] : amenity === "pub" ? ["pub"] : [];
+}
+
+function distance(a, b, c, d) {
+  const R = 6371000, toR = Math.PI / 180;
+  const x = Math.sin((c - a) * toR / 2) ** 2 + Math.cos(a * toR) * Math.cos(c * toR) * Math.sin((d - b) * toR / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+
+/* ---------- The judgement ---------- */
+
+const DISHES = {
+  thai: ["Pad kra pao with a fried egg on top", "Jungle curry, proper hot", "Pad see ew", "Green curry"],
+  indian: ["Lamb vindaloo", "Chicken tikka thali", "Paneer makhani", "Chicken balti with a garlic naan"],
+  mexican: ["Carnitas tacos", "A burrito the size of your forearm", "Birria tacos with the dipping broth", "Loaded nachos"],
+  korean: ["Bibimbap in a hot stone bowl", "Kimchi jjigae", "Korean fried chicken", "Tteokbokki"],
+  chinese: ["Salt and pepper chips", "Mapo tofu", "Char siu on rice", "Chicken chow mein with curry sauce"],
+  sichuan: ["Mapo tofu", "Dan dan noodles", "Chongqing chicken"],
+  asian: ["Katsu curry", "Crispy chilli beef", "Pad thai"],
+  japanese: ["Chicken katsu curry", "Salmon sashimi don", "Tonkotsu ramen"],
+  sushi: ["A posh sushi platter", "Salmon and avocado maki", "Chirashi bowl"],
+  ramen: ["Tonkotsu ramen", "Spicy miso ramen", "Shoyu ramen with an extra egg"],
+  vietnamese: ["Pho bo", "Banh mi", "Bun cha"],
+  italian: ["Cacio e pepe", "Lasagne", "Spaghetti carbonara", "Risotto ai funghi"],
+  pizza: ["Margherita", "Nduja and honey pizza", "Four cheese pizza", "A pepperoni slice, folded"],
+  french: ["Croque madame", "Steak frites", "Moules marinière"],
+  mediterranean: ["Mezze platter", "Grilled halloumi wrap", "Falafel bowl"],
+  greek: ["Chicken souvlaki pitta", "Moussaka", "Gyros with chips in it"],
+  turkish: ["Adana kebab", "Lahmacun", "Iskender kebab"],
+  lebanese: ["Shawarma plate", "Falafel wrap", "Manakish with za’atar"],
+  middle_eastern: ["Shawarma plate", "Falafel wrap", "Hummus with lamb"],
+  kebab: ["Doner wrap with chilli sauce", "Mixed grill", "Chicken shish on chips"],
+  burger: ["Double smash burger", "Bacon cheeseburger", "Fried chicken burger"],
+  american: ["Double smash burger", "Buffalo wings", "Mac and cheese"],
+  chicken: ["Spicy wings", "Peri-peri half chicken", "Chicken strips and chips"],
+  sandwich: ["A towering club sandwich", "Hot sausage breadcake", "Meatball sub"],
+  bakery: ["Steak bake and a vanilla slice", "Sausage roll, still hot", "Cheese and onion pasty"],
+  british: ["Fish and chips", "Pie, mash and gravy", "A roast dinner, whatever the day"],
+  fish_and_chips: ["Fish, chips and mushy peas", "Fishcake and chips with a splash of Hendo’s", "Chip butty with scraps"],
+  regional: ["Whatever’s on the specials board"],
+  spanish: ["Patatas bravas and croquetas", "Seafood paella", "Tortilla española"],
+  caribbean: ["Jerk chicken with rice and peas", "Curry goat", "Beef patty"],
+  steak_house: ["Ribeye, medium rare", "Steak sandwich"],
+  seafood: ["Grilled fish of the day", "Crab linguine", "Fish tacos"],
+  vegetarian: ["Roast veg grain bowl", "Halloumi burger", "Mushroom stroganoff"],
+  vegan: ["Jackfruit tacos", "Buddha bowl", "Tofu banh mi"],
+  salad: ["A virtuous grain bowl", "Chicken Caesar", "Poke-style salad"],
+  poke: ["Salmon poke bowl", "Tuna poke with extra edamame"],
+  ice_cream: ["Three scoops in a waffle cone, never mind the weather", "A knickerbocker glory for your dinner"],
+  bubble_tea: ["Brown sugar bubble tea and nowt else"],
+  donut: ["Two jam doughnuts. That’s your dinner. Don’t tell your mam"],
+  cake: ["A big slab of Victoria sponge and a brew"],
+  dessert: ["Pudding first, dinner never"],
+  cafe: ["Full English and a mug of builder’s", "Bacon breadcake with brown sauce", "Egg and chips", "Beans on toast with cheese", "Sausage breadcake and a brew"],
+  coffee_shop: ["Cheese toastie and a flat white", "Soup of the day with a bread roll"],
+  breakfast: ["Full English", "Bacon and egg breadcake", "Stack of pancakes"],
+  pub: ["Fish and chips", "Pie of the day", "Ploughman’s", "Yorkshire pud wrap"],
+  // Fallbacks by amenity when we know nowt about the place
+  restaurant: ["Whatever the chef’s proudest of", "The special. Don’t ask questions"],
+  fast_food: ["Chips and gravy", "Whatever’s quickest off the counter"],
+  food_court: ["Wander round and pick summat beige"],
+};
+
+// Each type scores itself from the traits and has a soft spot for some cuisines.
+// `about` is the parameter the line already jokes about, so the extra quip picks a different one.
+const ARCHETYPES = [
+  { name: "a proper livewire", about: "grin", score: (t) => t.grin * 0.9 + t.peeper * 0.8 + t.brow * 0.5 + t.motion * 0.3,
+    likes: ["thai", "sichuan", "korean", "indian", "mexican", "chicken", "kebab", "caribbean"],
+    line: () => `Wide-eyed and grinning like you’ve just spotted the pudding trolley. You need something with a bit of kick.` },
+  { name: "a bit nesh", about: "peeper", score: (t) => (1 - t.peeper) + (1 - t.grin) * 0.6 + t.darkClothes * 0.5 + (1 - t.light) * 0.3,
+    likes: ["ramen", "british", "pub", "italian", "pizza", "indian", "fish_and_chips", "cafe", "vietnamese"],
+    line: () => `Droopy peepers, not a smile in sight. You look perished, love. You want something warm inside you.` },
+  { name: "dressed to the nines", about: "clobber", score: (t) => t.clobber * 1.6 + t.dyed * 0.6,
+    likes: ["sushi", "japanese", "french", "spanish", "mediterranean", "poke", "greek", "italian"],
+    line: (t) => `Look at that ${t.clothes} clobber${t.dyed ? ", and the " + t.hair + " hair" : ""}. Too posh for a chip butty, you. Something fancy, then.` },
+  { name: "plain as a breadcake", about: "clobber", score: (t) => (1 - t.clobber) * 1.1 + (1 - t.brow) * 0.5 + (1 - Math.abs(t.grin - 0.3)) * 0.3,
+    likes: ["cafe", "bakery", "sandwich", "japanese", "vietnamese", "coffee_shop", "british", "salad"],
+    line: (t) => `Sensible ${t.clothes} clobber, face giving nowt away. Nowt wrong with that. Something simple, done properly.` },
+  { name: "a ray of sunshine", about: "grin", score: (t) => t.grin * 1.5 + t.warmClothes * 0.5 + t.light * 0.3,
+    likes: ["mexican", "greek", "caribbean", "spanish", "burger", "lebanese", "pizza", "mediterranean"],
+    line: () => `Grinning like you’ve found a tenner in your coat. Something sunny for you, duck.` },
+  { name: "keeping a low profile", about: "nosey", score: (t) => (1 - t.nosey) * 1.2 + t.darkClothes * 0.6 + (1 - t.light) * 0.3,
+    likes: ["kebab", "burger", "fish_and_chips", "chicken", "chinese", "sandwich", "pizza", "fast_food"],
+    line: () => `Sat right at the back in dark clobber. You want something you can eat on the go without anyone noticing.` },
+  { name: "all mouth", about: "gob", score: (t) => t.gob * 1.6,
+    likes: ["turkish", "lebanese", "steak_house", "pub", "middle_eastern", "italian", "american", "indian"],
+    line: () => `Gob open more than it’s shut. Big talker, big plate, love.` },
+  { name: "a proper nosey parker", about: "hooter", score: (t) => t.hooter * 1.2 + t.nosey * 0.9,
+    likes: ["fish_and_chips", "pub", "bakery", "british", "cafe", "chinese", "pizza"],
+    line: (t) => `Leaning right in for a good look. ${t.hooter > 0.5 ? "A hooter like that can smell a chippy from three streets off." : "Dainty nose, but it still knows where the chippy is."}` },
+  { name: "big barnet, big appetite", about: "barnet", score: (t) => t.barnet * 1.8,
+    likes: ["burger", "american", "pizza", "italian", "chicken", "mexican", "korean"],
+    line: (t) => `That ${t.hair} barnet’s got its own postcode. Hair that size needs feeding.` },
+  { name: "on high alert", about: "brow", score: (t) => t.brow * 1.4 + t.peeper * 0.5,
+    likes: ["coffee_shop", "cafe", "vietnamese", "japanese", "sushi", "salad", "lebanese"],
+    line: () => `Eyebrows up like you’ve just heard the price of a brew. Something light and quick, then.` },
+];
+const NEUTRAL = { barnet: 0.5, hooter: 0.5, peeper: 0.5, brow: 0.5, grin: 0.5, clobber: 0.5, nosey: 0.5, gob: 0.5, motion: 0.2, light: 0.5, darkClothes: 0.5, warmClothes: 0.5, dyed: 0 };
+
+// Remember recent picks for a bit so she doesn't send you to the same place every day.
+const HISTORY_KEY = "lunchlady:recent";
+function recent() { try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch { return []; } }
+function remember(name) {
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify([name, ...recent().filter((n) => n !== name)].slice(0, 12))); } catch {}
+}
+
+async function judge() {
+  $("judgeBtn").disabled = true;
+  if (!stream && !(await start())) { $("judgeBtn").disabled = false; return; }
+  if (!faceReader) {
+    $("placeholder").hidden = false; $("result").hidden = true;
+    $("placeholder").textContent = "Just putting my glasses on…";
+    await faceReady;
+    if (!faceReader) { $("placeholder").textContent = "My glasses won’t load, love (the face reader couldn’t download). Check your connection and refresh."; $("judgeBtn").disabled = false; return; }
+  }
+  scanning = { end: performance.now() + 5000, samples: [] };
+  $("scanline").hidden = false; $("countdown").hidden = false;
+  speak("Right then, let’s have a good look at you.");
+}
+
+async function finishScan() {
+  const s = scanning.samples; scanning = null;
+  $("scanline").hidden = true; $("countdown").hidden = true;
+  $("judgeBtn").disabled = false;
+  if (s.length < 10) {
+    $("placeholder").hidden = false; $("result").hidden = true;
+    $("placeholder").textContent = "I couldn’t get a proper look at you, love. Face the camera in decent light and try again.";
+    speak("I couldn’t see you, love. Try again.");
+    return;
+  }
+  if (lookup && !restaurants) {
+    $("placeholder").hidden = false; $("result").hidden = true;
+    $("placeholder").textContent = "Checking what’s nearby…";
+    await lookup;
+  }
+  $("judgeBtn").textContent = "Try again";
+
+  const avg = (k) => s.reduce((a, x) => a + x[k], 0) / s.length;
+  const mode = (k) => { const c = {}; for (const x of s) c[x[k]] = (c[x[k]] || 0) + 1; return Object.entries(c).sort((a, b) => b[1] - a[1])[0][0]; };
+  const t = Object.fromEntries(PARAMS.map((p) => [p.key, avg(p.key)]));
+  t.light = avg("light"); t.motion = avg("motion");
+  t.hair = mode("hair"); t.clothes = mode("clothes");
+  const [cr, , cb] = s[s.length - 1].clothesRgb;
+  const [, , cl] = rgbToHsl(...s[s.length - 1].clothesRgb);
+  t.darkClothes = 1 - cl; t.warmClothes = clamp(0.5 + (cr - cb) / 255); t.dyed = t.hair.startsWith("dyed") ? 1 : 0;
+
+  // Score each type relative to an average-looking person, plus a pinch of chance.
+  const ranked = ARCHETYPES.map((a) => ({ a, v: a.score(t) - a.score(NEUTRAL) + Math.random() * 0.4 })).sort((x, y) => y.v - x.v);
+  const arch = ranked[0].a, runnerUp = ranked[1].a;
+  const pool = buildPool(arch, runnerUp);
+  current = { arch, t, pool, pick: pool.length ? drawOne(pool) : null };
+  render(true);
+}
+
+function dishFor(r, likes) {
+  // Sweet shops and veggie places trump everything else, so no pork at a vegan place.
+  const first = r.cuisines.filter((c) => ["vegan", "vegetarian", "ice_cream", "bubble_tea", "donut", "cake", "dessert"].includes(c));
+  const order = [...first, ...r.cuisines.filter((c) => likes.includes(c)), ...r.cuisines, r.amenity];
+  for (const c of order) if (DISHES[c]) return DISHES[c][Math.floor(Math.random() * DISHES[c].length)];
+  return "The house special";
+}
+
+// Every place nearby gets a weight: better fit and closer = likelier, but anything can come up.
+function buildPool(arch, runnerUp) {
+  if (!restaurants?.length) return [];
+  const seen = recent();
+  return restaurants.map((r) => {
+    let fit = 0.25;
+    for (const c of r.cuisines) {
+      const a = arch.likes.indexOf(c), b = runnerUp.likes.indexOf(c);
+      if (a >= 0) fit = Math.max(fit, 1 - (a / arch.likes.length) * 0.5);
+      else if (b >= 0) fit = Math.max(fit, 0.6 - (b / runnerUp.likes.length) * 0.2);
+      else if (DISHES[c]) fit = Math.max(fit, 0.35);
+    }
+    const near = Math.exp(-r.dist / 900);
+    const stale = seen.includes(r.name) ? 0.15 : 1;
+    return { r, weight: fit * fit * (0.35 + near) * stale, dish: dishFor(r, arch.likes) };
+  }).filter((x) => x.weight > 0);
+}
+
+function drawOne(pool, exclude = new Set()) {
+  const options = pool.filter((x) => !exclude.has(x));
+  const total = options.reduce((a, x) => a + x.weight, 0);
+  let roll = Math.random() * total;
+  for (const x of options) if ((roll -= x.weight) <= 0) return x;
+  return options[options.length - 1] || null;
+}
+
+function reroll() {
+  if (!current) return;
+  if (current.pick) {
+    current.skipped = current.skipped || new Set();
+    current.skipped.add(current.pick);
+    current.pick = drawOne(current.pool, current.skipped) || drawOne(current.pool);
+    current.pick.dish = dishFor(current.pick.r, current.arch.likes);
+  }
+  render(false, "Fussy! How about this instead:");
+}
+
+function choose(entry) {
+  current.pick = entry;
+  render(false, "Good choice, love.");
+}
+
+function render(fresh, sayFirst) {
+  const { arch, t, pick, pool } = current;
+  let dish, where;
+  if (pick) {
+    const r = pick.r;
+    dish = pick.dish;
+    remember(r.name);
+    const maps = `https://www.google.com/maps/dir/?api=1&destination=${r.lat},${r.lon}&travelmode=walking`;
+    const mins = Math.max(1, Math.round(r.dist / 80));
+    where = `At <a href="${maps}" target="_blank" rel="noopener">${esc(r.name)}</a> · ${Math.round(r.dist)} m · about ${mins} min walk`;
+  } else {
+    const list = DISHES[arch.likes[Math.floor(Math.random() * 3)]];
+    dish = list[Math.floor(Math.random() * list.length)];
+    where = coords ? "Nothing on the map nearby, so you’ll have to hunt it down." : "Set a location to get a restaurant.";
+  }
+
+  $("placeholder").hidden = true; $("result").hidden = false;
+  $("archetype").textContent = arch.name;
+  $("dish").textContent = dish;
+  $("where").innerHTML = where;
+  // Add a quip about whichever parameter stood out most (that the type line didn't already cover).
+  const extremes = PARAMS.map((p) => ({ p, v: t[p.key] })).sort((a, b) => Math.abs(b.v - 0.5) - Math.abs(a.v - 0.5));
+  const standout = extremes.find((x) => x.p.key !== arch.about);
+  const quip = standout ? " " + (standout.v >= 0.5 ? standout.p.hi : standout.p.lo) : "";
+  $("reason").textContent = arch.line(t) + quip;
+  $("evidence").innerHTML = [
+    ...extremes.slice(0, 4).map((x) => `${x.p.name} ${Math.round(x.v * 100)}%`),
+    `Barnet shade: ${esc(t.hair)}`,
+  ].map((x) => `<li>${x}</li>`).join("");
+  $("rerollBtn").hidden = !pick || pool.length < 2;
+
+  renderSpecials();
+
+  const venue = pick ? ` at ${pick.r.name}` : "";
+  speak(fresh
+    ? `Ey up. You’re ${arch.name}. ${$("reason").textContent} You’re having ${dish}${venue}. Ta-ra, love.`
+    : `${sayFirst} ${dish}${venue}.`);
+}
+
+function renderSpecials() {
+  const { pool, pick } = current;
+  const picked = new Set(pick ? [pick] : []);
+  const board = [];
+  for (let i = 0; i < 7 && board.length < Math.min(7, pool.length - picked.size); i++) {
+    const x = drawOne(pool, new Set([...picked, ...board]));
+    if (x) board.push(x);
+  }
+  const ol = $("specials");
+  ol.innerHTML = "";
+  $("others").hidden = !board.length;
+  for (const x of board.sort((a, b) => a.r.dist - b.r.dist)) {
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.innerHTML = `<span class="d">${esc(x.dish)} <em>@ ${esc(x.r.name)}</em></span><span class="m">${Math.round(x.r.dist)} m</span>`;
+    btn.onclick = () => choose(x);
+    li.append(btn); ol.append(li);
+  }
+}
+
+function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+// Pick a British voice if there is one.
+function speak(text) {
+  if (!$("speak").checked || !("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const voices = speechSynthesis.getVoices().filter((v) => v.lang === "en-GB");
+  u.voice = voices.find((v) => /female|kate|serena|martha|stephanie|libby|sonia/i.test(v.name)) || voices[0] || null;
+  u.lang = "en-GB"; u.rate = 1.02; u.pitch = 1.15;
+  speechSynthesis.speak(u);
+}
+
+$("judgeBtn").onclick = judge;
+$("rerollBtn").onclick = reroll;
+$("changeLoc").onclick = () => { $("locForm").hidden = false; $("changeLoc").hidden = true; $("place").focus(); };
+$("locForm").onsubmit = (e) => { e.preventDefault(); geocode(); $("locForm").hidden = true; $("changeLoc").hidden = false; };
+requestLocation();
+</script>
+</body>
+</html>
